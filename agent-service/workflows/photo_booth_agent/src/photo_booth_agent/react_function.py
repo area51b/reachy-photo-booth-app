@@ -20,6 +20,32 @@ from photo_booth_agent.state import StructuredReActGraphState
 logger = logging.getLogger(SERVICE_NAME)
 
 
+def remove_text_block(
+    text: str, start_marker: str, end_marker: str, replacement: str
+) -> str:
+    """Remove the block between start_marker and end_marker (both inclusive)
+    and insert replacement text in its place."""
+    start_idx = text.find(start_marker)
+    if start_idx == -1:
+        logger.warning(f"start_marker not found: {repr(start_marker)}")
+        return text
+
+    end_idx = text.find(end_marker, start_idx)
+    if end_idx == -1:
+        logger.warning(f"end_marker not found: {repr(end_marker)}")
+        return text
+
+    end_idx += len(end_marker)
+
+    # Also consume the newline after the end marker if present
+    if end_idx < len(text) and text[end_idx] == "\n":
+        end_idx += 1
+
+    before = text[:start_idx]
+    after = text[end_idx:]
+    return before + replacement + after
+
+
 class PhotoBoothReactWorkflowConfig(ReActAgentWorkflowConfig, name="photo_booth_react"):
     """
     Configuration for the Photo Booth ReAct Agent Workflow.
@@ -50,6 +76,23 @@ class PhotoBoothReactWorkflowConfig(ReActAgentWorkflowConfig, name="photo_booth_
         ],
         description="Message variants to greet the user",
     )
+    quick_photo_mode: bool = Field(
+        default=False,
+        description="When True, skip asking the user for location, costume, and style. "
+        "Randomly picks from the whitelists below.",
+    )
+    quick_locations: list[str] = Field(
+        default=[],
+        description="Whitelist of allowed background locations for quick mode.",
+    )
+    quick_costumes: list[str] = Field(
+        default=[],
+        description="Whitelist of allowed costumes/outfits for quick mode.",
+    )
+    quick_styles: list[str] = Field(
+        default=[],
+        description="Whitelist of allowed artistic styles for quick mode.",
+    )
 
 
 @register_function(
@@ -78,6 +121,48 @@ async def photo_booth_react_function(
     prompt = SYSTEM_PROMPT if not config.system_prompt else config.system_prompt
     if config.additional_instructions:
         prompt += f" {config.additional_instructions}"
+
+        ########################################
+        ####### QUICK PHOTO MODE ###############
+        ########################################
+        QUESTION_BLOCK_START = "%%QUESTION_BLOCK_START%%"
+        QUESTION_BLOCK_END = "%%QUESTION_BLOCK_END%%"
+
+        if config.quick_photo_mode:
+            logger.info(
+                "Quick photo mode enabled - LLM will only ask 2 questions and select from lists"
+            )
+
+            # quick_mode_patch = f"""
+            # QUICK PHOTO MODE IS ENABLED:
+            # - DO NOT ask the user any questions about location, costume, or artistic style.
+            # - Randomly select ONE option from each list below. Be truly random - avoid always picking the first option:
+            # * Artistic style - pick one from: {config.quick_styles}
+            # * Background/location - pick one from: {config.quick_locations}
+            # * Outfit/costume - pick one from: {config.quick_costumes}
+            # - Each interaction should feel different, so vary your selections across the lists.
+            # - Proceed directly to capturing the user with `look_at_human`, then call `generate_image` immediately.
+            # - Construct the image generation prompt using the selected values, following the existing prompt format rules."""
+
+            quick_mode_patch = f"""
+            QUICK PHOTO MODE IS ENABLED:
+            - DO NOT ask the user any questions on artistic style.
+            - Only ask the user about the background/location, and outfit/costume.
+            - For artistic style, use something as natural as possible.
+            - There should not be any extra people or characters in the photo - the focus should be on the actual people in front of the camera.
+
+            """
+
+            markers_found = (
+                QUESTION_BLOCK_START in prompt and QUESTION_BLOCK_END in prompt
+            )
+            logger.info(f"Quick mode patch - markers found: {markers_found}")
+
+            prompt = remove_text_block(
+                prompt, QUESTION_BLOCK_START, QUESTION_BLOCK_END, quick_mode_patch
+            )
+            logger.info(f"Quick mode patch applied. Prompt length: {len(prompt)}")
+            logger.info(f"Quick mode patch applied. Prompt: {prompt}")
 
     if not PhotoBoothReactAgentGraph.validate_system_prompt(prompt):
         raise ValueError("Invalid system prompt")
