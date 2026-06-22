@@ -114,6 +114,7 @@ class RivaConfig(BaseModel):
 class SpeechToTextConfig(BaseConfig):
     input_devices_index_or_name: list[int | str] = Field(
         default=["Reachy Mini Audio", "reSpeaker"]
+        #default=["Wireless Microphone RX"]
     )
     audio_config: AudioConfig = Field(default=AudioConfig())
     riva_config: RivaConfig = Field(default=RivaConfig())
