@@ -33,10 +33,17 @@ services:
     environment:
       - XDG_RUNTIME_DIR=/run/user/1000
       - PULSE_SERVER=unix:/run/user/1000/pulse/native
-    #configs:
-    #  - source: config_speech_to_text
-    #    target: /config.yaml
-
+    # If u want to use reachy's original audio input, comment out everything below
+    configs:
+     - source: config_speech_to_text
+       target: /config.yaml
+configs:
+  config_speech_to_text:
+    content: |
+      input_devices_index_or_name: ["Wireless Microphone RX"]
+      audio_config:
+        sample_rate: 48000  
+        
 #configs:
 #  config_speech_to_text:
 #    content: |
