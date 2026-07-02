@@ -432,61 +432,123 @@ def _generate_download_page_html(image_download_url: str) -> str:
         </html>
         """  # noqa: E501
 
+# def _overlay_dell_logo(
+#     image_bytes: bytes, logo_path: str = "/app/src/Dell_Technologies_logo.png"
+# ) -> bytes:
+#     """Overlay Dell Technologies logo on the generated image.
+
+#     Args:
+#         image_bytes: The generated image as bytes (PNG/JPEG format)
+#         logo_path: Path to the Dell logo PNG file
+
+#     Returns:
+#         Image bytes with logo overlaid in top-left corner
+#     """
+#     try:
+#         logger.debug(f"Loading image for logo overlay")
+#         # Load the generated image
+#         generated_image = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
+
+#         # Load the Dell logo
+#         if not os.path.exists(logo_path):
+#             logger.warning(f"Dell logo not found at {logo_path}, skipping logo overlay")
+#             # Return original image
+#             output = io.BytesIO()
+#             generated_image.save(output, "PNG")
+#             return output.getvalue()
+
+#         logo_image = Image.open(logo_path).convert("RGBA")
+#         logger.debug(f"Loaded Dell logo: {logo_image.size}")
+
+#         # Calculate logo size (20% of generated image width)
+#         logo_width = max(int(generated_image.width * 0.2), 50)  # Minimum 50px
+#         aspect_ratio = logo_image.height / logo_image.width
+#         logo_height = int(logo_width * aspect_ratio)
+
+#         # Resize logo
+#         logo_resized = logo_image.resize(
+#             (logo_width, logo_height), Image.Resampling.LANCZOS
+#         )
+#         logger.debug(f"Resized logo to {logo_resized.size}")
+
+#         # Calculate position (top-left with 20px padding)
+#         padding = 20
+#         position = (padding, padding)
+
+#         # Overlay logo on the generated image
+#         generated_image.paste(logo_resized, position, logo_resized)
+#         logger.debug(f"Overlaid Dell logo at position {position}")
+
+#         # Convert back to bytes
+#         output = io.BytesIO()
+#         generated_image.save(output, "PNG")
+#         result_bytes = output.getvalue()
+#         logger.debug(f"Logo overlay complete, result size: {len(result_bytes)} bytes")
+
+#         return result_bytes
+
+#     except Exception as e:
+#         logger.exception(f"Failed to overlay Dell logo: {e}")
+#         # Return original image if overlay fails
+#         return image_bytes
 
 def _overlay_dell_logo(
-    image_bytes: bytes, logo_path: str = "/app/src/Dell_Technologies_logo.png"
+    image_bytes: bytes, logo_path: str = "/app/src/csg.png"
 ) -> bytes:
-    """Overlay Dell Technologies logo on the generated image.
+    """Overlay the Dell presentation frame on the generated image.
 
     Args:
         image_bytes: The generated image as bytes (PNG/JPEG format)
-        logo_path: Path to the Dell logo PNG file
+        logo_path: Path to the Dell overlay PNG file
 
     Returns:
-        Image bytes with logo overlaid in top-left corner
+        Image bytes with the Dell overlay applied
     """
     try:
-        logger.debug(f"Loading image for logo overlay")
+        logger.debug("Loading image for Dell overlay")
+
         # Load the generated image
         generated_image = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
 
-        # Load the Dell logo
+        # Check if overlay exists
         if not os.path.exists(logo_path):
-            logger.warning(f"Dell logo not found at {logo_path}, skipping logo overlay")
-            # Return original image
+            logger.warning(
+                f"Dell overlay not found at {logo_path}, skipping overlay"
+            )
             output = io.BytesIO()
             generated_image.save(output, "PNG")
             return output.getvalue()
 
-        logo_image = Image.open(logo_path).convert("RGBA")
-        logger.debug(f"Loaded Dell logo: {logo_image.size}")
+        # Load the overlay
+        overlay = Image.open(logo_path).convert("RGBA")
+        logger.debug(f"Loaded Dell overlay: {overlay.size}")
 
-        # Calculate logo size (20% of generated image width)
-        logo_width = max(int(generated_image.width * 0.2), 50)  # Minimum 50px
-        aspect_ratio = logo_image.height / logo_image.width
-        logo_height = int(logo_width * aspect_ratio)
-
-        # Resize logo
-        logo_resized = logo_image.resize(
-            (logo_width, logo_height), Image.Resampling.LANCZOS
+        # Resize overlay to exactly match the generated image
+        overlay = overlay.resize(
+            generated_image.size,
+            Image.Resampling.LANCZOS,
         )
-        logger.debug(f"Resized logo to {logo_resized.size}")
+        logger.debug(f"Resized overlay to {overlay.size}")
 
-        # Calculate position (top-left with 20px padding)
-        padding = 20
-        position = (padding, padding)
+        # Composite the overlay on top of the generated image
+        generated_image.alpha_composite(overlay)
+        logger.debug("Applied Dell overlay")
 
-        # Overlay logo on the generated image
-        generated_image.paste(logo_resized, position, logo_resized)
-        logger.debug(f"Overlaid Dell logo at position {position}")
-
-        # Convert back to bytes
+        # Save the result
         output = io.BytesIO()
-        generated_image.save(output, "PNG")
+        generated_image.save(output, format="PNG")
         result_bytes = output.getvalue()
-        logger.debug(f"Logo overlay complete, result size: {len(result_bytes)} bytes")
+
+        logger.debug(
+            f"Overlay complete, result size: {len(result_bytes)} bytes"
+        )
 
         return result_bytes
+
+    except Exception as e:
+        logger.exception(f"Failed to apply Dell overlay: {e}")
+        # Return original image if overlay fails
+        return image_bytes
 
     except Exception as e:
         logger.exception(f"Failed to overlay Dell logo: {e}")
