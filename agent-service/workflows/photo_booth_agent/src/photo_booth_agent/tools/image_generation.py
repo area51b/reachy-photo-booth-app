@@ -493,7 +493,7 @@ def _generate_download_page_html(image_download_url: str) -> str:
 #         return image_bytes
 
 def _overlay_dell_logo(
-    image_bytes: bytes, logo_path: str = "/app/src/csg.png"
+    image_bytes: bytes, logo_path: str = "/app/src/DigitalBanner_ReachyPhotobooth_1620x1080px_NCS.png"
 ) -> bytes:
     """Overlay the Dell presentation frame on the generated image.
 
