@@ -27,7 +27,8 @@ class Robot(Enum):
 
 class AudioConfig(BaseModel):
     output_devices_index_or_name: list[int | str] = Field(
-        default=["Reachy Mini Audio", "reSpeaker"]
+        # default=["STOCKWELL II", "Reachy Mini Audio", "reSpeaker"]
+        default=["STOCKWELL II"]
     )
 
     sample_rate: int = Field(ge=1, lt=100000, default=16000)

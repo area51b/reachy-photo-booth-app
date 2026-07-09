@@ -25,13 +25,13 @@ services:
       - /dev:/dev
     volumes:
       - /dev:/dev
-    configs:
-     - source: config_camera
-       target: /config.yaml
-configs:
- config_camera:
-   content: |
-    #  camera_serial_or_url: <name_of_your_camera>
-     streaming_resolution:
-       width: 1620
-       height: 1080
+#     configs:
+#      - source: config_camera
+#        target: /config.yaml
+# configs:
+#  config_camera:
+#    content: |
+#      camera_serial_or_url: <name_of_your_camera>
+#      streaming_resolution:
+#        width: 1620
+#        height: 1080

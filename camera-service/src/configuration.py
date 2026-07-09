@@ -27,10 +27,10 @@ class Resolution(BaseModel):
     """Resolution for the camera service."""
 
     width: int = Field(
-        default=1920,
+        default=1620,
         description="The width of the image sent by the camera",
         ge=1,
-        le=1920,
+        le=1620,
     )
     height: int = Field(
         default=1080,
@@ -59,11 +59,11 @@ class CameraConfig(BaseConfig):
         le=120,
     )
     streaming_resolution: Resolution = Field(
-        default=Resolution(width=1920, height=1080),
+        default=Resolution(width=1620, height=1080),
         description="The resolution for streaming video from the camera",
     )
     capture_resolution: Resolution = Field(
-        default=Resolution(width=1920, height=1080),
+        default=Resolution(width=1620, height=1080),
         description="The resolution for single shot photo from the camera",
     )
     encoding: ImageEncoding = Field(

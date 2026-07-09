@@ -149,8 +149,8 @@ async def photo_booth_react_function(
             - DO NOT ask the user any questions on artistic style.
             - Only ask the user about the background/location, and outfit/costume.
             - For artistic style, use something as natural as possible.
-            - There should not be any extra people or characters in the photo - the focus should be on the actual people in front of the camera.
-
+            # - There should not be any extra people or characters in the photo - the focus should be on the actual people in front of the camera.
+            - Make sure the outfit is changed as requested for everyone in the photo.
             """
 
             markers_found = (
